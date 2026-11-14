@@ -37,7 +37,7 @@ Open `/owner?pet=PT-1042` for Today (one activity ring), Journal, Vet Plan and H
 
 Journal entries, manual owner tasks and monthly body checks persist through the shared SQLite/D1 owner service. Only Published plans and Reviewed results are returned to this interface. A draft plan does not provide an owner activity target. Newly submitted photos do not generate an AI BCS. The Health Age number and trend remain visibly labelled design examples and are independent of clinical data. Care-task consistency uses saved records.
 
-See [the owner + vet walkthrough](docs/owner-demo.md) for a reproducible local demo and the remaining production boundaries. This interface is committed for the next deployment; it is not automatically published when pushed to GitHub.
+See [the owner + vet walkthrough](docs/owner-demo.md) for a reproducible local demo and the remaining production boundaries. The owner interface and vet workspace share the hosted origin after a Sites deployment. GitHub pushes alone do not update the live version.
 
 ## Database
 

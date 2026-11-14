@@ -1,6 +1,12 @@
 # Owner + vet demo walkthrough
 
-This commit adds `/owner` to the existing app. It is prepared for hosting, but publishing is a separate step. The existing live site stays on its previous version until deployed.
+The owner interface and vet workspace use the same hosted database. Open these two tabs for the online demo:
+
+- Vet: https://checkapet-vet.vivid-coot-4069.chatgpt.site/?pet=PT-1042&tab=care-plan
+- Owner: https://checkapet-vet.vivid-coot-4069.chatgpt.site/owner?pet=PT-1042&day=2026-11-14
+- Healthspan: https://checkapet-vet.vivid-coot-4069.chatgpt.site/owner?pet=PT-1042&day=2026-11-14&page=healthspan
+
+The `day` parameter selects the fictional collar day for a repeatable presentation. It does not reset or modify the shared database. Existing hosted edits survive redeployment.
 
 ## Start
 
@@ -46,7 +52,7 @@ Open Healthspan. The prominent Health Age and chart are fixed illustrative desig
 
 ## Hosting preparation
 
-The Worker serves `/owner` and the same shared owner service runs against local SQLite or hosted D1. No new schema migration or reset is required for this addition. Once deployed, owner and vet writes share the hosted database. Local records do not automatically upload to the hosted database.
+The Worker serves `/owner` and the same shared owner service runs against local SQLite or hosted D1. No new schema migration or reset is required for this addition. Owner and vet writes share the hosted database. Local records do not automatically upload to the hosted database.
 
 Owner endpoints:
 
