@@ -1,4 +1,4 @@
-# Findapet veterinary prevention workspace
+# Checkapet veterinary prevention workspace
 
 Veterinary-side prototype for Gillmore Hackathon 2026, Challenge 1, Prevention that pays. Clinical results, synthetic home wearable readings and owner check-ins appear in one patient record, where a veterinarian can review results and approve a prevention plan.
 
@@ -81,7 +81,7 @@ Not deployed. This backend requires a writable persistent filesystem for SQLite.
 
 ## Visual references
 
-Findapet uses a cream, yellow and near-black theme inspired by the Doctapet veterinary website, with rounded cards and soft green accents informed by its published owner-app screenshots. The Findapet name and paw mark identify this hackathon concept; they are not the Doctapet logo.
+Checkapet uses a cream, yellow and near-black theme inspired by the Doctapet veterinary website, with rounded cards and soft green accents informed by its published owner-app screenshots. The Checkapet name and paw mark identify this hackathon concept; they are not the Doctapet logo.
 
 - Website: https://doctapet.ai/#vets
 - Published app screenshots: https://apps.apple.com/gb/app/doctapet/id6760935053
