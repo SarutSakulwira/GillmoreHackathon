@@ -79,4 +79,10 @@ Store tests cover persistence, matching, validation, non-multiplying views, spec
 
 ## Hosting
 
-Not publicly deployed. Static hosting alone does not provide the API or persistent SQLite storage. A shared version needs a persistent backend or an adapted API with a hosted database.
+The hosted version uses a Cloudflare Worker and persistent D1 database provisioned through Sites. Its project binding is in `.openai/hosting.json`. Local development continues to use SQLite.
+
+`npm run build` builds the React app, checks/generates the initial hosted schema and fictional seed, then creates the deployable Worker at `dist/server/index.js`. Assets are embedded in the Worker so image and report routes stay on the same origin. No local patient database, local edits or database backups are bundled.
+
+`drizzle/0000_checkapet.sql` is schema-only and immutable after deployment. Seed data is separate in `worker/seed.json`, generated from a fresh fictional cohort, and inserted once through a transactional D1 batch. Future deployments retain hosted edits. Hosted reset is disabled. Add a new migration for future schema changes.
+
+The public presentation site shares one fictional dataset across visitors. Saved plan and review changes are visible to other visitors. The local and hosted datasets are independent. This is still a hackathon prototype, not a place for real clinical or owner data.
