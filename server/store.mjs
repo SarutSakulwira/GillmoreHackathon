@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { upgrade } from './upgrade.mjs';
 
 export class InputError extends Error { constructor(message) { super(message); this.status = 400; } }
 export function createStore(path) {
@@ -19,13 +20,14 @@ export function createStore(path) {
   function seed() {
     db.exec('BEGIN');
     try {
+      for (const table of ['task_completions','plan_tasks','diagnostic_files','body_assessments','devices','encounters','medications','vaccinations','allergies','migrations']) if(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table)) db.exec(`DELETE FROM ${table}`);
       for (const table of ['results','wearable','owner_logs','plans','programmes','pets']) db.exec(`DELETE FROM ${table}`);
       const pets = [
         ['PT-1042','Milo','Golden Retriever',7,'Male','Alex Morgan','MI','Healthy Weight','Brookfield Veterinary'],
         ['PT-1043','Luna','Labrador Retriever',5,'Female','Sam Taylor','LU','Healthy Weight','Brookfield Veterinary'],
         ['PT-1044','Oliver','Cocker Spaniel',9,'Male','Jamie Wilson','OL','Active Ageing','Brookfield Veterinary']
       ];
-      for (const pet of pets) db.prepare('INSERT INTO pets VALUES (?,?,?,?,?,?,?,?,?)').run(...pet);
+      for (const pet of pets) db.prepare('INSERT INTO pets(id,name,breed,age,sex,owner,initials,programme,clinic) VALUES (?,?,?,?,?,?,?,?,?)').run(...pet);
       const stamp='2026-11-14T09:30:00Z';
       const samples=[
         ['R-001','PT-1042','Weight','Body weight',32.4,'kg',null,null,'Clinic scale','2026-11-13T10:00:00Z','Reviewed','Weight entered by clinic.'],
@@ -48,7 +50,7 @@ export function createStore(path) {
         for(let i=0;i<14;i++) {
           const day=`2026-11-${String(i+1).padStart(2,'0')}`;
           const activity=[58,63,55,69,61,72,65,60,66,56,59,51,48,54][i]+p*5;
-          db.prepare('INSERT INTO wearable VALUES (?,?,?,?,?,?,?)').run(`W-${p}-${i}`,id,day,i===11&&p===0?null:activity,i===11&&p===0?null:Number((12.5+Math.sin(i+p)*1.2).toFixed(1)),i===11&&p===0?'Missing':'Complete','Demo collar simulator');
+          db.prepare('INSERT INTO wearable(id,petId,day,activeMinutes,restHours,quality,source) VALUES (?,?,?,?,?,?,?)').run(`W-${p}-${i}`,id,day,i===11&&p===0?null:activity,i===11&&p===0?null:Number((12.5+Math.sin(i+p)*1.2).toFixed(1)),i===11&&p===0?'Missing':'Complete','Demo collar simulator');
           if(i>6) db.prepare('INSERT INTO owner_logs VALUES (?,?,?,?,?,?)').run(`L-${p}-${i}`,id,day,'Daily check-in',i===10?'Partial':'Completed',i===10?'Evening walk shortened because of rain.':'Meals and routine logged by owner.');
         }
         db.prepare('INSERT INTO plans VALUES (?,?,?,?,?,?,?,?)').run(`P-${p}`,id,p===2?'Maintain a comfortable daily routine.':'Support consistent activity and vet-supervised weight management.',JSON.stringify(['Record meals and treats daily.','Follow the activity plan agreed with the clinic.','Record weight at the agreed check-in.']),p===0?'2026-11-14':'2026-11-21',p===0?'Draft':'Published',stamp,'Dr. Avery Chen');
@@ -58,9 +60,10 @@ export function createStore(path) {
     } catch(e) {db.exec('ROLLBACK');throw e;}
   }
   if (!db.prepare('SELECT COUNT(*) AS count FROM pets').get().count) seed();
+  upgrade(db);
   const findPet = id => db.prepare('SELECT * FROM pets WHERE id=?').get(id);
   function workspace() {
-    return { pets:all('pets'),results:all('results'),wearable:all('wearable'),ownerLogs:all('owner_logs'),plans:all('plans').map(p=>({...p,tasks:JSON.parse(p.tasks)})),programmes:all('programmes') };
+    return { pets:all('pets'),results:all('results'),wearable:all('wearable'),ownerLogs:all('owner_logs'),plans:all('plans').map(p=>({...p,tasks:JSON.parse(p.tasks)})),programmes:all('programmes'), encounters:all('encounters'),medications:all('medications'),vaccinations:all('vaccinations'),allergies:all('allergies'),bodyAssessments:all('body_assessments'),files:all('diagnostic_files'),devices:all('devices'),planTasks:all('plan_tasks'),taskCompletions:all('task_completions'),dashboardViews:{patientSummary:all('patient_summary'),bodyConditionTimeline:all('body_condition_timeline'),dailyHomeData:all('daily_home_data'),carePlanProgress:all('care_plan_progress')} };
   }
   function importResult(input) {
     if (!input || typeof input !== 'object') throw new InputError('A result object is required.');
@@ -98,7 +101,23 @@ export function createStore(path) {
     if(!Array.isArray(input.tasks)||!input.tasks.length||input.tasks.length>10||input.tasks.some(t=>typeof t!=='string'||!t.trim()||t.length>500))throw new InputError('Add between 1 and 10 tasks (maximum 500 characters each).');
     if(!/^\d{4}-\d{2}-\d{2}$/.test(input.reviewDate)||!Number.isFinite(Date.parse(input.reviewDate)))throw new InputError('Choose a review date.');
     if(!['Draft','Published'].includes(input.status))throw new InputError('Invalid plan status.');
+    const plan=db.prepare('SELECT id FROM plans WHERE petId=?').get(petId);
+    if(!plan)throw new InputError('Plan not found.');
+    if(input.structuredTasks!==undefined){
+      if(!Array.isArray(input.structuredTasks)||input.structuredTasks.length<1||input.structuredTasks.length>10)throw new InputError('Add 1–10 tasks.');
+      for(const t of input.structuredTasks)if(!t||typeof t.label!=='string'||!t.label.trim()||t.label.length>500||!['activeMinutes','ownerCheckin','weightKg'].includes(t.metric)||!['Daily','Weekly','Monthly'].includes(t.frequency)||!['Wearable','Owner','Clinic'].includes(t.source)||(t.target!==null&&(!Number.isFinite(t.target)||t.target<=0)))throw new InputError('Check task labels, targets and sources.');
+      if(input.status==='Published'&&input.structuredTasks.some(t=>t.metric!=='weightKg'&&t.target===null))throw new InputError('Set activity and check-in targets before approval.');
+      if(new Set(input.structuredTasks.filter(t=>t.id).map(t=>t.id)).size!==input.structuredTasks.filter(t=>t.id).length)throw new InputError('Duplicate task IDs.');
+      for(const t of input.structuredTasks)if(t.id&&!db.prepare('SELECT id FROM plan_tasks WHERE id=? AND planId=?').get(t.id,plan.id))throw new InputError('Task does not belong to this plan.');
+    }
+    db.exec('BEGIN');try{
     db.prepare('UPDATE plans SET goal=?,tasks=?,reviewDate=?,status=?,updatedAt=?,updatedBy=? WHERE petId=?').run(input.goal,JSON.stringify(input.tasks),input.reviewDate,input.status,new Date().toISOString(),'Dr. Avery Chen',petId);
+    if(input.structuredTasks){
+      const keep=new Set(input.structuredTasks.map(t=>t.id));
+      for(const old of db.prepare('SELECT id FROM plan_tasks WHERE planId=?').all(plan.id))if(!keep.has(old.id)){db.prepare('DELETE FROM task_completions WHERE taskId=?').run(old.id);db.prepare('DELETE FROM plan_tasks WHERE id=?').run(old.id);}
+      for(const t of input.structuredTasks){const old=t.id?db.prepare('SELECT metric,source FROM plan_tasks WHERE id=?').get(t.id):null;if(old&&(old.metric!==t.metric||old.source!==t.source))db.prepare('DELETE FROM task_completions WHERE taskId=?').run(t.id);db.prepare('INSERT INTO plan_tasks(id,planId,label,metric,target,unit,frequency,source) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET label=excluded.label,metric=excluded.metric,target=excluded.target,unit=excluded.unit,frequency=excluded.frequency,source=excluded.source').run(t.id||randomUUID(),plan.id,t.label,t.metric,t.target,t.metric==='activeMinutes'?'min':t.metric==='weightKg'?'kg':'entry',t.frequency,t.source);}
+    }
+    db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
   }
-  return {workspace,importResult,matchResult,review,savePlan,reset:seed,close:()=>db.close()};
+  return {workspace,importResult,matchResult,review,savePlan,reset:()=>{seed();upgrade(db);},close:()=>db.close()};
 }

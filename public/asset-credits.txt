@@ -1,0 +1,18 @@
+Checkapet reference assets
+All patient identities and clinical data in this workspace are fictional.
+Photographs illustrate patient profiles and are not verified breed-identification references.
+Pet portraits: Unsplash images, downloaded at 350px under the Unsplash License (https://unsplash.com/license).
+Milo: https://images.unsplash.com/photo-1552053831-71594a27632d
+Luna: https://images.unsplash.com/photo-1573865526739-10659fec78a5
+Oliver: https://images.unsplash.com/photo-1583337130417-3346a1be7dee
+Charlie: https://images.unsplash.com/photo-1543466835-00a7907e9de1
+Bella: https://images.unsplash.com/photo-1551717743-49959800b1f6
+Mochi: https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba
+Cleo: https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8
+Coco: https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308
+Snowball: https://images.unsplash.com/photo-1535241749838-299277b6305f
+Teddy: https://images.unsplash.com/photo-1518717758536-85ae29035b6d
+Thoracic radiograph: Ophélie TISSIER, Radiographie thoracique chien.jpg, 2016.
+Source: https://commons.wikimedia.org/wiki/File:Radiographie_thoracique_chien.jpg
+License: CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
+Original image is unmodified. Shown as reference material, not as the named patient's diagnostic study.
