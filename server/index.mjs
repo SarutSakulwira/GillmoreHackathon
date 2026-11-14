@@ -18,6 +18,13 @@ const server=createServer(async(req,res)=>{
    // Local demonstration only. Prevent requests from unrelated browser origins.
    const origin=req.headers.origin;
    if(origin&&!new Set([`http://127.0.0.1:${port}`,`http://localhost:${port}`,'http://127.0.0.1:5173','http://localhost:5173']).has(origin))return json(res,403,{error:'Origin not allowed.'});
+   const ownerRoute=url.pathname.match(/^\/api\/owner\/([^/]+)(?:\/(journal|body-check|tasks)(?:\/([^/]+))?)?$/);
+   if(ownerRoute){const [,petId,section,taskId]=ownerRoute;
+    if(req.method==='GET'&&!section)return json(res,200,await store.owner.workspace(petId));
+    if(req.method==='POST'&&section==='journal')return json(res,200,await store.owner.saveJournal(petId,await body(req)));
+    if(req.method==='POST'&&section==='body-check')return json(res,200,await store.owner.saveBodyCheck(petId,await body(req)));
+    if(req.method==='PUT'&&section==='tasks'&&taskId)return json(res,200,await store.owner.completeTask(petId,taskId,await body(req)));
+   }
    if(req.method==='GET'&&url.pathname==='/api/workspace')return json(res,200,store.workspace());
    if(req.method==='POST'&&url.pathname==='/api/results')return json(res,201,store.importResult(await body(req)));
    let match=url.pathname.match(/^\/api\/results\/([^/]+)\/(review|match)$/);

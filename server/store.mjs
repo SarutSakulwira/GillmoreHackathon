@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { upgrade } from './upgrade.mjs';
+import { createOwnerService } from './owner.mjs';
+import { sqliteAdapter } from './sqlite-adapter.mjs';
 
 export class InputError extends Error { constructor(message) { super(message); this.status = 400; } }
 export function createStore(path) {
@@ -119,5 +121,5 @@ export function createStore(path) {
     }
     db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
   }
-  return {workspace,importResult,matchResult,review,savePlan,reset:()=>{seed();upgrade(db);},close:()=>db.close()};
+  return {workspace,owner:createOwnerService(sqliteAdapter(db)),importResult,matchResult,review,savePlan,reset:()=>{seed();upgrade(db);},close:()=>db.close()};
 }

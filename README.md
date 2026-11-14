@@ -31,6 +31,14 @@ The app opens directly to 10 fictional patients: 5 dogs, 3 cats and 2 rabbits.
 - Care Plan supports templates, editable tasks, measurement targets, frequency, data source, review dates, drafts and approval. Changing a task's measurement or source clears incompatible completion records. Saving a target recalculates progress against the current target, not historical targets. The owner preview reads saved data and does not send anything to an owner app.
 - View Data opens read-only SQL views or source tables scoped to the selected patient. Select a row to inspect the full record, inspect its source, or export the current table to JSON.
 
+## Owner interface
+
+Open `/owner?pet=PT-1042` for Today (one activity ring), Journal, Vet Plan and Healthspan. The patient header in the vet app includes an Owner app link. `/owner?pet=PT-1042&page=healthspan` opens the Health Age design directly. Use `&day=2026-11-14` to present the fictional collar day after that date.
+
+Journal entries, manual owner tasks and monthly body checks persist through the shared SQLite/D1 owner service. Only Published plans and Reviewed results are returned to this interface. A draft plan does not provide an owner activity target. Newly submitted photos do not generate an AI BCS. The Health Age number and trend remain visibly labelled design examples and are independent of clinical data. Care-task consistency uses saved records.
+
+See [the owner + vet walkthrough](docs/owner-demo.md) for a reproducible local demo and the remaining production boundaries. This interface is committed for the next deployment; it is not automatically published when pushed to GitHub.
+
 ## Database
 
 React reads the Node HTTP API backed by SQLite at `data/carelink.sqlite`. The filename remains unchanged to preserve earlier work. Set `DATABASE_PATH` to select another database. Runtime data and backups are excluded from Git.
