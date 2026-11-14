@@ -1,0 +1,12 @@
+{
+  "externalPatientId": "PT-1042",
+  "type": "Blood chemistry",
+  "label": "Glucose",
+  "value": 5.8,
+  "unit": "mmol/L",
+  "low": 3.3,
+  "high": 6.7,
+  "source": "Demo chemistry analyser",
+  "observedAt": "2026-11-14T10:45:00Z",
+  "note": "Synthetic demonstration result. Reference interval is illustrative."
+}
