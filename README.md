@@ -1,4 +1,4 @@
-# Carelink veterinary prevention workspace
+# Syncapet veterinary prevention workspace
 
 Veterinary-side prototype for Gillmore Hackathon 2026, Challenge 1, Prevention that pays. Clinical results, synthetic home wearable readings and owner check-ins appear in one patient record, where a veterinarian can review results and approve a prevention plan.
 
@@ -78,3 +78,10 @@ Tests cover persistence, unmatched-patient quarantine, explicit matching, valida
 ## Hosting
 
 Not deployed. This backend requires a writable persistent filesystem for SQLite. Uploading only the Vite build to a static host does not deploy the API. For a shared online version, choose a persistent Node host or adapt the API to serverless functions with a hosted database. Do not assume local SQLite persists on Vercel functions.
+
+## Visual references
+
+Syncapet uses a cream, yellow and near-black theme inspired by the Doctapet veterinary website, with rounded cards and soft green accents informed by its published owner-app screenshots. The Syncapet name and paw mark identify this hackathon concept; they are not the Doctapet logo.
+
+- Website: https://doctapet.ai/#vets
+- Published app screenshots: https://apps.apple.com/gb/app/doctapet/id6760935053

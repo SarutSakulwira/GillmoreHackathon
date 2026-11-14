@@ -36,5 +36,5 @@ const server=createServer(async(req,res)=>{
   res.writeHead(200,{'Content-Type':types[extname(file)]||'application/octet-stream'});res.end(content);
  }catch(e){json(res,e.status||500,{error:e.status?e.message:'Server error. Check the terminal.'});if(!e.status)console.error(e);}
 });
-server.listen(port,'127.0.0.1',()=>console.log(`Carelink API and production preview: http://127.0.0.1:${port}`));
+server.listen(port,'127.0.0.1',()=>console.log(`Syncapet API and production preview: http://127.0.0.1:${port}`));
 for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>server.close(()=>{store.close();process.exit(0);}));
