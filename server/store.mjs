@@ -25,7 +25,7 @@ export function createStore(path) {
   function seed() {
     db.exec('BEGIN');
     try {
-      for (const table of ['task_photos','reward_coupons','reward_challenges','consultation_requests','plan_versions','record_reviews','task_completions','plan_tasks','diagnostic_files','body_assessments','devices','encounters','medications','vaccinations','allergies','migrations']) if(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table)) db.exec(`DELETE FROM ${table}`);
+      for (const table of ['demo_snapshots','task_photos','reward_coupons','reward_challenges','consultation_requests','plan_versions','record_reviews','task_completions','plan_tasks','diagnostic_files','body_assessments','devices','encounters','medications','vaccinations','allergies','migrations']) if(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table)) db.exec(`DELETE FROM ${table}`);
       for (const table of ['results','wearable','owner_logs','plans','programmes','pets']) db.exec(`DELETE FROM ${table}`);
       const pets = [
         ['PT-1042','Milo','Golden Retriever',7,'Male','Alex Morgan','MI','Healthy Weight','Brookfield Veterinary'],

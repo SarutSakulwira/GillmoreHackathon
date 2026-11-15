@@ -30,3 +30,16 @@ test('existing collar flags remain reviewable and use product-facing copy',async
  assert.equal(signal.state,'flag');assert.equal(allowProductOptions(signal),false);
  assert.doesNotMatch(signal.reason,/demo|simulated/i);
 });
+
+test('collar reset restores its original reading and leaves plans, other pets and clinical records intact',async()=>{
+ const s=createStore(':memory:');try{await s.seedSampleDay();const day='2026-11-15',before=s.workspace();
+ await s.simulateCollar('PT-1042',{day,seconds:180});await s.simulateCollar('PT-1044',{day,seconds:150});
+ await s.simulateCollar('PT-1042',{day,action:'reset'});const after=s.workspace();
+ assert.deepEqual(after.wearable.find(w=>w.petId==='PT-1042'&&w.day===day),before.wearable.find(w=>w.petId==='PT-1042'&&w.day===day));
+ assert.ok(!after.ownerLogs.some(l=>l.id===`DEMO-ITCH-PT-1042-${day}`));assert.ok(after.ownerLogs.some(l=>l.id===`DEMO-ITCH-PT-1044-${day}`));
+ assert.deepEqual(after.plans,before.plans);assert.deepEqual(after.encounters,before.encounters);assert.deepEqual(after.files,before.files);
+ const owner=await s.owner.workspace('PT-1042');assert.ok(owner.imaging.some(f=>f.resultId==='MILO-XRAY'&&f.imagePath));
+ await s.simulateCollar('PT-1042',{day,action:'reset'});assert.deepEqual(s.workspace(),after);
+ await s.simulateCollar('PT-1042',{day:'2020-01-01',seconds:150});await s.simulateCollar('PT-1042',{day:'2020-01-01',action:'reset'});assert.ok(!s.workspace().wearable.some(w=>w.petId==='PT-1042'&&w.day==='2020-01-01'));
+ }finally{s.close();}
+});

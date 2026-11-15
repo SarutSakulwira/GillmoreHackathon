@@ -1,6 +1,12 @@
 // A single, explicitly requested fictional day. No scheduled or rolling data generation.
 export const SAMPLE_DAY='2026-11-15';
 export async function seedSampleDay(db){
+ const imagingMarker='milo-imaging-v1';
+ if(!await db.prepare('SELECT id FROM migrations WHERE id=?').bind(imagingMarker).first())await db.batch([
+ db.prepare("INSERT OR IGNORE INTO results(id,petId,externalPatientId,type,label,value,unit,source,observedAt,receivedAt,status,reviewedBy,reviewedAt,note) VALUES('MILO-XRAY','PT-1042','PT-1042','Imaging','Thoracic X-ray',NULL,'','External imaging clinic','2026-11-15T09:00:00Z','2026-11-15T09:10:00Z','Reviewed','Dr. Avery Chen','2026-11-15T09:30:00Z','Fictional study record with an illustrative reference image.')"),
+ db.prepare("INSERT OR IGNORE INTO diagnostic_files VALUES('FILE-MILO-XRAY','PT-1042','MILO-XRAY','X-ray','Thoracic radiograph','2026-11-15','Thorax','/clinical/dog-thorax.jpg','Illustrative reference image for the presentation; not an actual scan of Milo. No diagnostic interpretation recorded.','Dr. Avery Chen')"),
+ db.prepare("INSERT OR IGNORE INTO record_reviews VALUES('MILO-XRAY','PT-1042','Shared result','Dr. Avery Chen','2026-11-15T09:30:00Z')"),
+ db.prepare('INSERT OR IGNORE INTO migrations VALUES(?)').bind(imagingMarker)]);
  const marker='sample-day-'+SAMPLE_DAY;
  if(await db.prepare('SELECT id FROM migrations WHERE id=?').bind(marker).first())return;
  const pets=(await db.prepare('SELECT * FROM pets ORDER BY id').all()).results;

@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS demo_snapshots(petId TEXT NOT NULL REFERENCES pets(id),day TEXT NOT NULL,payload TEXT NOT NULL,PRIMARY KEY(petId,day));
