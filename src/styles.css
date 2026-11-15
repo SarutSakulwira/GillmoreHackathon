@@ -15,3 +15,5 @@
 .owner-update.collar-flag-row,.attention-row.collar-flag-row,.reading-details tr.collar-flag-row{background:#fff1f2;color:#a42335}
 .owner-update.collar-flag-row{border-left:4px solid #bd3045}.owner-update.collar-flag-row p,.attention-row.collar-flag-row p{color:#a42335}
 .collar-flag-row .attention-icon{color:#a42335;background:#fde5e6}.collar-flag-row .button{color:#a42335;border-color:#e3aab1}
+
+.clinical-video{display:block;width:100%;max-height:65vh;background:#111;border-radius:8px;margin:18px 0} @media print{video.clinical-video{display:none}}

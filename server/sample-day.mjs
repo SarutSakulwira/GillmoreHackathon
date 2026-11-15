@@ -7,6 +7,10 @@ export async function seedSampleDay(db){
  db.prepare("INSERT OR IGNORE INTO diagnostic_files VALUES('FILE-MILO-XRAY','PT-1042','MILO-XRAY','X-ray','Thoracic radiograph','2026-11-15','Thorax','/clinical/dog-thorax.jpg','Illustrative reference image for the presentation; not an actual scan of Milo. No diagnostic interpretation recorded.','Dr. Avery Chen')"),
  db.prepare("INSERT OR IGNORE INTO record_reviews VALUES('MILO-XRAY','PT-1042','Shared result','Dr. Avery Chen','2026-11-15T09:30:00Z')"),
  db.prepare('INSERT OR IGNORE INTO migrations VALUES(?)').bind(imagingMarker)]);
+ const videoMarker='milo-ultrasound-video-v1';
+ if(!await db.prepare('SELECT id FROM migrations WHERE id=?').bind(videoMarker).first())await db.batch([
+ db.prepare("UPDATE diagnostic_files SET imagePath='/clinical/canine-ultrasound.mp4',report=report||' Educational example: canine liver shear-wave ultrasound, Cha et al. (2022), CC BY 4.0; shortened and resized. Not a scan of Milo.' WHERE id='FILE-R005' AND petId='PT-1042' AND imagePath IS NULL"),
+ db.prepare('INSERT OR IGNORE INTO migrations VALUES(?)').bind(videoMarker)]);
  const marker='sample-day-'+SAMPLE_DAY;
  if(await db.prepare('SELECT id FROM migrations WHERE id=?').bind(marker).first())return;
  const pets=(await db.prepare('SELECT * FROM pets ORDER BY id').all()).results;

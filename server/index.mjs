@@ -47,7 +47,7 @@ const server=createServer(async(req,res)=>{
   if(path!==root&&!path.startsWith(root+sep))return json(res,403,{error:'Invalid path.'});
   let content;let file=path;
   try{content=await readFile(file);}catch{file=join(root,'index.html');content=await readFile(file);}
-  const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.txt':'text/plain; charset=utf-8'};
+  const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.txt':'text/plain; charset=utf-8','.mp4':'video/mp4'};
   res.writeHead(200,{'Content-Type':types[extname(file)]||'application/octet-stream'});res.end(content);
  }catch(e){json(res,e.status||500,{error:e.status?e.message:'Server error. Check the terminal.'});if(!e.status)console.error(e);}
 });

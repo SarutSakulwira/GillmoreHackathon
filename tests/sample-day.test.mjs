@@ -19,7 +19,7 @@ test('today fixtures append a complete cohort day, preserve existing edits and r
   assert.ok(after.devices.every(d=>d.lastSync.startsWith(day)));assert.ok(after.pets.every(p=>p.lastVisit===day));
   assert.equal(after.results.filter(r=>r.observedAt.startsWith(day)&&r.status==='Pending review').length,3);
   for(const old of before.results)assert.deepEqual(after.results.find(r=>r.id===old.id),old);
-  assert.deepEqual(after.medications,before.medications);assert.deepEqual(after.vaccinations,before.vaccinations);for(const file of before.files)assert.deepEqual(after.files.find(f=>f.id===file.id),file);assert.ok(after.files.some(f=>f.petId==='PT-1042'&&f.kind==='X-ray'&&f.imagePath));
+  assert.deepEqual(after.medications,before.medications);assert.deepEqual(after.vaccinations,before.vaccinations);for(const file of before.files)if(file.id!=='FILE-R005')assert.deepEqual(after.files.find(f=>f.id===file.id),file);assert.equal(after.files.find(f=>f.id==='FILE-R005').imagePath,'/clinical/canine-ultrasound.mp4');assert.ok(after.files.some(f=>f.petId==='PT-1042'&&f.kind==='X-ray'&&f.imagePath));
   await s.seedSampleDay();assert.deepEqual(s.workspace(),after);
  }finally{s.close();}
 });
