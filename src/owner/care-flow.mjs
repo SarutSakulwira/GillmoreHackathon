@@ -1,3 +1,4 @@
+import {isCollarFlag,collarText} from '../collar.mjs';
 export const catalog=[
  {id:'syncapet',name:'Syncapet',brand:'Doctapet',category:'Syncapet',kind:'Collar concept',audience:'Dogs',image:'/shop/syncapet.svg',summary:'A light collar clip for daily behaviour tracking.',details:'Planned: motion sensing, daily behaviour summaries and Bluetooth sync to your phone. Battery life and sensing performance still need hardware validation.',price:'Price to be confirmed',concept:true},
  {id:'calm-o-care',name:'Calm-O-Care',brand:'Doctapet',category:'Supplements',kind:'Supplement',audience:'Dogs & cats',image:'/shop/calm-o-care.png',summary:'Calming supplement · 20 × 1 g sachets.',details:'Product reference from the Doctapet catalogue. Check suitability, ingredients and directions with your vet before use. This product is not a response to a health alert.',price:'See retailer for price',concept:false,url:'https://doctapet.com/products/pet-calming-care-supplement',retailer:'https://www.amazon.in/Doctapet-Supplement-L-Theanine-L-Tryptophan-Relaxation/dp/B0GSSMFW93'},
@@ -6,10 +7,8 @@ export const catalog=[
 ];
 export function careFlow(data,day,scenario='live'){
  if(['normal','watch','flag'].includes(scenario))return {state:scenario,preview:true,title:scenario==='normal'?'Keep your routine going':scenario==='watch'?'A change worth checking':'Speak with your vet',reason:scenario==='normal'?'Sample pattern: behaviour stays close to the pet’s usual routine.':scenario==='watch'?'Sample pattern: activity has changed across several complete readings.':'Sample pattern: a persistent change needs a veterinary review.'};
- const collarFlag=data?.ownerLogs?.find(l=>l.day===day&&l.kind==='Virtual collar demo'&&l.value==='Flagged');
- if(collarFlag)return {state:'flag',preview:false,title:'Speak with your vet',reason:collarFlag.note};
- const simulatedFlag=data?.ownerLogs?.find(l=>l.day===day&&l.kind==='Virtual collar demo'&&l.value==='Flagged');
- if(simulatedFlag)return {state:'flag',preview:true,title:'Speak with your vet',reason:'The virtual collar demo raised a behaviour flag. This is a simulated signal, not a diagnosis.'};
+ const collarFlag=data?.ownerLogs?.find(l=>l.day===day&&isCollarFlag(l));
+ if(collarFlag)return {state:'flag',preview:false,title:'Speak with your vet',reason:collarText(collarFlag.note)};
  const reading=data?.wearable?.find(r=>r.day===day),log=data?.ownerLogs?.find(l=>l.day===day&&l.kind==='Health journal');let j=log?.journal;try{if(!j&&log)j=JSON.parse(log.note);}catch{}
  const changes=j&&Object.entries({appetite:'Usual',comfort:'Comfortable',drinking:'Usual',toileting:'Usual'}).some(([key,value])=>j[key]&&j[key]!==value);
  if(changes)return {state:'watch',preview:false,title:'You reported a change',reason:'Review what you noticed and follow your vet’s plan. You can ask your own clinic for advice.'};

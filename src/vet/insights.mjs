@@ -1,4 +1,6 @@
+import {isCollarFlag} from '../collar.mjs';
 export function journalChanges(log){
+ if(isCollarFlag(log))return ['Increased scratching'];
  if(log.kind!=='Health journal')return [];
  try{const j=JSON.parse(log.note);return [['appetite','Usual','Appetite'],['comfort','Comfortable','Comfort'],['drinking','Usual','Drinking'],['toileting','Usual','Toileting']].filter(([k,v])=>j[k]&&j[k]!==v).map(([k,,label])=>`${label}: ${j[k]}`);}catch{return [];}
 }
