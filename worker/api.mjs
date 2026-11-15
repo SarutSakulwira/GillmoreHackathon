@@ -1,3 +1,4 @@
+import {seedMiloSkinPlan} from '../server/milo-plan.mjs';
 import {createEngagementService} from '../server/engagement.mjs';
 import {simulateCollar} from '../server/demo.mjs';
 import {createOwnerService} from '../server/owner.mjs';
@@ -17,6 +18,7 @@ export function createApi(seed){
    statements.push(db.prepare("INSERT OR IGNORE INTO hosted_seed VALUES ('cohort-v1')"));await db.batch(statements);
    }
    await seedSampleDay(db);
+   await seedMiloSkinPlan(db);
   })().catch(e=>{initialized=undefined;throw e;});
   await initialized;
  }

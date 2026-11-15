@@ -43,3 +43,13 @@ test('collar reset restores its original reading and leaves plans, other pets an
  await s.simulateCollar('PT-1042',{day:'2020-01-01',seconds:150});await s.simulateCollar('PT-1042',{day:'2020-01-01',action:'reset'});assert.ok(!s.workspace().wearable.some(w=>w.petId==='PT-1042'&&w.day==='2020-01-01'));
  }finally{s.close();}
 });
+
+test('Milo skin plan is scoped, archives the previous plan and keeps later edits',async()=>{
+ const s=createStore(':memory:');try{const before=s.workspace(),other=before.plans.find(p=>p.petId==='PT-1044');
+ await s.seedMiloSkinPlan();const after=s.workspace(),plan=after.plans.find(p=>p.petId==='PT-1042');assert.equal(plan.status,'Published');assert.equal(plan.reviewDate,'2026-11-18');assert.equal(after.pets.find(p=>p.id==='PT-1042').programme,'Skin Comfort');
+ assert.deepEqual(after.plans.find(p=>p.petId==='PT-1044'),other);assert.ok(after.planVersions.some(v=>v.petId==='PT-1042'&&v.kind==='Archived'));
+ assert.deepEqual(after.encounters,before.encounters);assert.deepEqual(after.results,before.results);
+ const tasks=after.planTasks.filter(t=>t.planId===plan.id);assert.equal(tasks.length,2);assert.ok(tasks.every(t=>t.metric==='ownerCheckin'&&t.source==='Owner'));assert.match(tasks[0].label,/scratch/i);
+ s.savePlan('PT-1042',{...plan,goal:'Keep the vet’s later edit',tasks:tasks.map(t=>t.label),structuredTasks:tasks});await s.seedMiloSkinPlan();assert.equal(s.workspace().plans.find(p=>p.id===plan.id).goal,'Keep the vet’s later edit');
+ }finally{s.close();}
+});

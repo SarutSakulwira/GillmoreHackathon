@@ -6,6 +6,7 @@ import { createStore } from './store.mjs';
 const base=fileURLToPath(new URL('../',import.meta.url));
 const store=createStore(process.env.DATABASE_PATH||join(base,'data','carelink.sqlite'));
 await store.seedSampleDay();
+await store.seedMiloSkinPlan();
 const port=Number(process.env.PORT||3001);
 const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
 async function body(req) {

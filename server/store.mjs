@@ -1,3 +1,4 @@
+import {seedMiloSkinPlan} from './milo-plan.mjs';
 import {createEngagementService} from './engagement.mjs';
 import {simulateCollar} from './demo.mjs';
 import { DatabaseSync } from 'node:sqlite';
@@ -134,5 +135,5 @@ export function createStore(path) {
     }
     db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
   }
-  return {engagement:createEngagementService(sqliteAdapter(db)),simulateCollar:(petId,input)=>simulateCollar(sqliteAdapter(db),petId,input),workspace,seedSampleDay:()=>seedSampleDay(sqliteAdapter(db)),owner:createOwnerService(sqliteAdapter(db)),importResult,matchResult,review,savePlan,reviewOwner(id){const row=db.prepare('SELECT * FROM owner_logs WHERE id=?').get(id);if(!row)throw new InputError('Owner update not found.');db.prepare('INSERT OR REPLACE INTO record_reviews VALUES(?,?,?,?,?)').run(id,row.petId,'Owner update','Dr. Avery Chen',new Date().toISOString());},reset:()=>{seed();upgrade(db);},close:()=>db.close()};
+  return {seedMiloSkinPlan:()=>seedMiloSkinPlan(sqliteAdapter(db)),engagement:createEngagementService(sqliteAdapter(db)),simulateCollar:(petId,input)=>simulateCollar(sqliteAdapter(db),petId,input),workspace,seedSampleDay:()=>seedSampleDay(sqliteAdapter(db)),owner:createOwnerService(sqliteAdapter(db)),importResult,matchResult,review,savePlan,reviewOwner(id){const row=db.prepare('SELECT * FROM owner_logs WHERE id=?').get(id);if(!row)throw new InputError('Owner update not found.');db.prepare('INSERT OR REPLACE INTO record_reviews VALUES(?,?,?,?,?)').run(id,row.petId,'Owner update','Dr. Avery Chen',new Date().toISOString());},reset:()=>{seed();upgrade(db);},close:()=>db.close()};
 }
