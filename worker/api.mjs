@@ -1,4 +1,5 @@
 import {createOwnerService} from '../server/owner.mjs';
+import {seedSampleDay} from '../server/sample-day.mjs';
 const mapping={pets:'pets',results:'results',wearable:'wearable',ownerLogs:'owner_logs',plans:'plans',programmes:'programmes',encounters:'encounters',medications:'medications',vaccinations:'vaccinations',allergies:'allergies',bodyAssessments:'body_assessments',files:'diagnostic_files',devices:'devices',planTasks:'plan_tasks',taskCompletions:'task_completions'};
 const views={patientSummary:'patient_summary',bodyConditionTimeline:'body_condition_timeline',dailyHomeData:'daily_home_data',carePlanProgress:'care_plan_progress'};
 const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
@@ -8,10 +9,12 @@ export function createApi(seed){
  let initialized;
  async function initialize(db){
   if(!initialized)initialized=(async()=>{
-   if(await db.prepare("SELECT id FROM hosted_seed WHERE id='cohort-v1'").first())return;
+   if(!await db.prepare("SELECT id FROM hosted_seed WHERE id='cohort-v1'").first()){
    const statements=[];
    for(const [table,rows] of Object.entries(seed))for(const row of rows){const columns=Object.keys(row);statements.push(db.prepare(`INSERT OR IGNORE INTO ${table} (${columns.join(',')}) VALUES (${columns.map(()=>'?').join(',')})`).bind(...Object.values(row)));}
    statements.push(db.prepare("INSERT OR IGNORE INTO hosted_seed VALUES ('cohort-v1')"));await db.batch(statements);
+   }
+   await seedSampleDay(db);
   })().catch(e=>{initialized=undefined;throw e;});
   await initialized;
  }

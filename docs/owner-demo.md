@@ -3,8 +3,8 @@
 The owner interface and vet workspace use the same hosted database. Open these two tabs for the online demo:
 
 - Vet: https://checkapet-vet.vivid-coot-4069.chatgpt.site/?pet=PT-1042&tab=care-plan
-- Owner: https://checkapet-vet.vivid-coot-4069.chatgpt.site/owner?pet=PT-1042&day=2026-11-14
-- Healthspan: https://checkapet-vet.vivid-coot-4069.chatgpt.site/owner?pet=PT-1042&day=2026-11-14&page=healthspan
+- Owner: https://checkapet-vet.vivid-coot-4069.chatgpt.site/owner?pet=PT-1042&day=2026-11-15
+- Healthspan: https://checkapet-vet.vivid-coot-4069.chatgpt.site/owner?pet=PT-1042&day=2026-11-15&page=healthspan
 
 The `day` parameter selects the fictional collar day for a repeatable presentation. It does not reset or modify the shared database. Existing hosted edits survive redeployment.
 
@@ -18,9 +18,9 @@ npm start
 Open two tabs:
 
 - Vet: http://127.0.0.1:3001/?pet=PT-1042&tab=care-plan
-- Owner: http://127.0.0.1:3001/owner?pet=PT-1042&day=2026-11-14
+- Owner: http://127.0.0.1:3001/owner?pet=PT-1042&day=2026-11-15
 
-The explicit date keeps the sample collar readings useful when presenting after 14 November. Without `day`, the owner app uses the current date in Europe/London and shows missing readings rather than recycling yesterday's activity as today's.
+The explicit date keeps the sample collar readings useful when presenting after 15 November. Without `day`, the owner app uses the current date in Europe/London and shows missing readings rather than recycling yesterday's activity as today's.
 
 ## 1. A plan from the vet
 
@@ -62,3 +62,9 @@ Owner endpoints:
 - `PUT /api/owner/:petId/tasks/:taskId`
 
 The interface deliberately offers the five fictional dogs with collar data. Pet ID selection scopes responses, but it is not authentication or production access control. Before real use, add verified owner accounts, pet ownership checks, explicit clinical publication permissions, secure file storage, access logging and validated device/model integrations. Do not enter real personal or clinical data into this prototype.
+
+## Added sample day: 15 November 2026
+
+The release adds a one-time fictional morning snapshot for 15 November: five canine collar readings, ten journals, ten clinic/home body checks, ten follow-up visits, weight observations, task progress and three lab results awaiting review. It preserves prior records, today's owner submissions, published/draft plan status and edited targets. The morning readings have Partial quality and a sync timestamp of 08:45 UTC. Medications, vaccinations and existing imaging are not relabelled or repeated.
+
+This is a fixed sample day, not a physical device feed or an automatically advancing daily generator. `server/sample-day.mjs` applies the same idempotent data update to local SQLite and hosted D1, outside schema migrations.

@@ -33,7 +33,7 @@ The app opens directly to 10 fictional patients: 5 dogs, 3 cats and 2 rabbits.
 
 ## Owner interface
 
-Open `/owner?pet=PT-1042` for Today (one activity ring), Journal, Vet Plan and Healthspan. The patient header in the vet app includes an Owner app link. `/owner?pet=PT-1042&page=healthspan` opens the Health Age design directly. Use `&day=2026-11-14` to present the fictional collar day after that date.
+Open `/owner?pet=PT-1042` for Today (one activity ring), Journal, Vet Plan and Healthspan. The patient header in the vet app includes an Owner app link. `/owner?pet=PT-1042&page=healthspan` opens the Health Age design directly. Use `&day=2026-11-15` to present the latest fictional collar day after that date.
 
 Journal entries, manual owner tasks and monthly body checks persist through the shared SQLite/D1 owner service. Only Published plans and Reviewed results are returned to this interface. A draft plan does not provide an owner activity target. Newly submitted photos do not generate an AI BCS. The Health Age number and trend remain visibly labelled design examples and are independent of clinical data. Care-task consistency uses saved records.
 
@@ -94,3 +94,7 @@ The hosted version uses a Cloudflare Worker and persistent D1 database provision
 `drizzle/0000_checkapet.sql` is schema-only and immutable after deployment. Seed data is separate in `worker/seed.json`, generated from a fresh fictional cohort, and inserted once through a transactional D1 batch. Future deployments retain hosted edits. Hosted reset is disabled. Add a new migration for future schema changes.
 
 The public presentation site shares one fictional dataset across visitors. Saved plan and review changes are visible to other visitors. The local and hosted datasets are independent. This is still a hackathon prototype, not a place for real clinical or owner data.
+
+## 15 November sample update
+
+Server startup and hosted initialization apply one explicitly requested fictional day through `server/sample-day.mjs`. The update is additive and runs once per database. Existing plan targets, statuses, owner entries and previous medical history are retained. It does not generate new records on future dates automatically.

@@ -7,7 +7,7 @@ type Row=Record<string,any>;
 const ownerNote=(log:Row)=>{if(log.kind!=='Health journal')return clean(log.note);try{const j=JSON.parse(log.note);return `Appetite: ${j.appetite}. Comfort: ${j.comfort}. Drinking: ${j.drinking}. Toileting: ${j.toileting}.${j.note?' '+j.note:''}`;}catch{return clean(log.note);}};
 type Task={id?:string;label:string;metric:string;target:number|null;unit:string;frequency:string;source:string};
 type Data={pets:Row[];results:Row[];wearable:Row[];ownerLogs:Row[];plans:Row[];programmes:Row[];encounters:Row[];medications:Row[];vaccinations:Row[];allergies:Row[];bodyAssessments:Row[];files:Row[];devices:Row[];planTasks:Row[];taskCompletions:Row[];dashboardViews:Record<string,Row[]>};
-const TODAY='2026-11-14';
+const TODAY=(()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());return ['year','month','day'].map(key=>parts.find(p=>p.type===key)!.value).join('-');})();
 const TABS=['Summary','Medical Records','Wearable & Owner Updates','Care Plan'];
 const date=(v:any)=>v?new Date(String(v).slice(0,10)+'T12:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}):'—';
 const clean=(v:any)=>String(v??'').replace(/Demo /gi,'').replace(/simulated|synthetic|illustrative/gi,'').trim();
