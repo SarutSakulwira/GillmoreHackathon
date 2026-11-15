@@ -1,3 +1,4 @@
+import {simulateCollar} from './demo.mjs';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
@@ -23,7 +24,7 @@ export function createStore(path) {
   function seed() {
     db.exec('BEGIN');
     try {
-      for (const table of ['plan_versions','record_reviews','task_completions','plan_tasks','diagnostic_files','body_assessments','devices','encounters','medications','vaccinations','allergies','migrations']) if(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table)) db.exec(`DELETE FROM ${table}`);
+      for (const table of ['consultation_requests','plan_versions','record_reviews','task_completions','plan_tasks','diagnostic_files','body_assessments','devices','encounters','medications','vaccinations','allergies','migrations']) if(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table)) db.exec(`DELETE FROM ${table}`);
       for (const table of ['results','wearable','owner_logs','plans','programmes','pets']) db.exec(`DELETE FROM ${table}`);
       const pets = [
         ['PT-1042','Milo','Golden Retriever',7,'Male','Alex Morgan','MI','Healthy Weight','Brookfield Veterinary'],
@@ -66,7 +67,7 @@ export function createStore(path) {
   upgrade(db);
   const findPet = id => db.prepare('SELECT * FROM pets WHERE id=?').get(id);
   function workspace() {
-    return {planVersions:all('plan_versions').map(v=>({...v,payload:JSON.parse(v.payload)})),recordReviews:all('record_reviews'), pets:all('pets'),results:all('results'),wearable:all('wearable'),ownerLogs:all('owner_logs'),plans:all('plans').map(p=>({...p,tasks:JSON.parse(p.tasks)})),programmes:all('programmes'), encounters:all('encounters'),medications:all('medications'),vaccinations:all('vaccinations'),allergies:all('allergies'),bodyAssessments:all('body_assessments'),files:all('diagnostic_files'),devices:all('devices'),planTasks:all('plan_tasks'),taskCompletions:all('task_completions'),dashboardViews:{patientSummary:all('patient_summary'),bodyConditionTimeline:all('body_condition_timeline'),dailyHomeData:all('daily_home_data'),carePlanProgress:all('care_plan_progress')} };
+    return {consultations:all('consultation_requests'),planVersions:all('plan_versions').map(v=>({...v,payload:JSON.parse(v.payload)})),recordReviews:all('record_reviews'), pets:all('pets'),results:all('results'),wearable:all('wearable'),ownerLogs:all('owner_logs'),plans:all('plans').map(p=>({...p,tasks:JSON.parse(p.tasks)})),programmes:all('programmes'), encounters:all('encounters'),medications:all('medications'),vaccinations:all('vaccinations'),allergies:all('allergies'),bodyAssessments:all('body_assessments'),files:all('diagnostic_files'),devices:all('devices'),planTasks:all('plan_tasks'),taskCompletions:all('task_completions'),dashboardViews:{patientSummary:all('patient_summary'),bodyConditionTimeline:all('body_condition_timeline'),dailyHomeData:all('daily_home_data'),carePlanProgress:all('care_plan_progress')} };
   }
   function importResult(input) {
     if (!input || typeof input !== 'object') throw new InputError('A result object is required.');
@@ -119,10 +120,10 @@ export function createStore(path) {
     if(input.structuredTasks)for(const t of input.structuredTasks)if(t.metric==='activeMinutes'&&(findPet(petId).species!=='Dog'||t.source!=='Wearable')||t.metric==='weightKg'&&t.source==='Wearable'||t.metric==='ownerCheckin'&&t.source!=='Owner')throw new InputError('Choose a supported source for this measure.');
     if(input.status==='Draft'&&plan.status==='Published'){
       db.prepare('DELETE FROM plan_versions WHERE petId=? AND kind=?').run(petId,'Draft');
-      db.prepare('INSERT INTO plan_versions VALUES(?,?,?,?,?)').run(randomUUID(),petId,'Draft',JSON.stringify(input),now);return;
+      db.prepare('INSERT INTO plan_versions(id,petId,kind,payload,createdAt) VALUES(?,?,?,?,?)').run(randomUUID(),petId,'Draft',JSON.stringify(input),now);return;
     }
     db.exec('BEGIN');try{
-    db.prepare('INSERT INTO plan_versions VALUES(?,?,?,?,?)').run(randomUUID(),petId,'Archived',JSON.stringify({...plan,structuredTasks:db.prepare('SELECT * FROM plan_tasks WHERE planId=?').all(plan.id),completions:db.prepare('SELECT c.* FROM task_completions c JOIN plan_tasks t ON t.id=c.taskId WHERE t.planId=?').all(plan.id)}),now);
+    db.prepare('INSERT INTO plan_versions(id,petId,kind,payload,createdAt) VALUES(?,?,?,?,?)').run(randomUUID(),petId,'Archived',JSON.stringify({...plan,structuredTasks:db.prepare('SELECT * FROM plan_tasks WHERE planId=?').all(plan.id),completions:db.prepare('SELECT c.* FROM task_completions c JOIN plan_tasks t ON t.id=c.taskId WHERE t.planId=?').all(plan.id)}),now);
     db.prepare("DELETE FROM plan_versions WHERE petId=? AND kind='Draft'").run(petId);
     db.prepare('UPDATE plans SET goal=?,tasks=?,reviewDate=?,status=?,updatedAt=?,updatedBy=? WHERE petId=?').run(input.goal,JSON.stringify(input.tasks),input.reviewDate,input.status,new Date().toISOString(),'Dr. Avery Chen',petId);
     if(input.structuredTasks){
@@ -132,5 +133,5 @@ export function createStore(path) {
     }
     db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
   }
-  return {workspace,seedSampleDay:()=>seedSampleDay(sqliteAdapter(db)),owner:createOwnerService(sqliteAdapter(db)),importResult,matchResult,review,savePlan,reviewOwner(id){const row=db.prepare('SELECT * FROM owner_logs WHERE id=?').get(id);if(!row)throw new InputError('Owner update not found.');db.prepare('INSERT OR REPLACE INTO record_reviews VALUES(?,?,?,?,?)').run(id,row.petId,'Owner update','Dr. Avery Chen',new Date().toISOString());},reset:()=>{seed();upgrade(db);},close:()=>db.close()};
+  return {simulateCollar:(petId,input)=>simulateCollar(sqliteAdapter(db),petId,input),workspace,seedSampleDay:()=>seedSampleDay(sqliteAdapter(db)),owner:createOwnerService(sqliteAdapter(db)),importResult,matchResult,review,savePlan,reviewOwner(id){const row=db.prepare('SELECT * FROM owner_logs WHERE id=?').get(id);if(!row)throw new InputError('Owner update not found.');db.prepare('INSERT OR REPLACE INTO record_reviews VALUES(?,?,?,?,?)').run(id,row.petId,'Owner update','Dr. Avery Chen',new Date().toISOString());},reset:()=>{seed();upgrade(db);},close:()=>db.close()};
 }

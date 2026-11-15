@@ -68,3 +68,11 @@ The interface deliberately offers the five fictional dogs with collar data. Pet 
 The release adds a one-time fictional morning snapshot for 15 November: five canine collar readings, ten journals, ten clinic/home body checks, ten follow-up visits, weight observations, task progress and three lab results awaiting review. It preserves prior records, today's owner submissions, published/draft plan status and edited targets. The morning readings have Partial quality and a sync timestamp of 08:45 UTC. Medications, vaccinations and existing imaging are not relabelled or repeated.
 
 This is a fixed sample day, not a physical device feed or an automatically advancing daily generator. `server/sample-day.mjs` applies the same idempotent data update to local SQLite and hosted D1, outside schema migrations.
+
+## Virtual dog / collar scenario
+
+Open `/demo` (also linked from the vet header). Choose an assigned dog and demo day. `Scratch` adds 30 simulated seconds; `Run itch episode` adds 120. `Rest` checks the same total without adding time. This updates the selected day's scratching reading, so use fictional data only.
+
+The supplied demo rule flags itch time ≥120 s/day or strictly >2× the mean of up to seven previous complete days with ≥1,200 valid wear minutes. Missing history disables the relative comparison. The demo rule is not a validated diagnostic criterion.
+
+Use **Open owner app** to see the collar alert and continue into the existing health / consultation flow. Use **Open vet workspace** to see the same flag, then review it under Wearable & Owner Updates and continue to the care plan. Existing tabs reload data when focused (vet refresh waits while there are unsaved edits or an open dialog). Repeated sends update one demo entry per dog/day rather than duplicating alerts. Local and hosted databases remain independent; publishing is a separate action.

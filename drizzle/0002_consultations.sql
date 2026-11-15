@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS consultation_requests(id TEXT PRIMARY KEY,petId TEXT NOT NULL REFERENCES pets(id),mode TEXT NOT NULL,reason TEXT NOT NULL,preferredDate TEXT NOT NULL,preferredWindow TEXT NOT NULL,shareSummary INTEGER NOT NULL,status TEXT NOT NULL,createdAt TEXT NOT NULL,summary TEXT);

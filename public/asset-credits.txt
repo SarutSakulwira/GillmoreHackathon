@@ -16,3 +16,5 @@ Thoracic radiograph: Ophélie TISSIER, Radiographie thoracique chien.jpg, 2016.
 Source: https://commons.wikimedia.org/wiki/File:Radiographie_thoracique_chien.jpg
 License: CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
 Original image is unmodified. Shown as reference material, not as the named patient's diagnostic study.
+
+Shop reference: Calm-O-Care product image from Doctapet, https://doctapet.com/products/pet-calming-care-supplement (retrieved 15 November 2026). Used as a product reference in this hackathon prototype. Brand ownership remains with Doctapet. Syncapet and unbranded partner-device illustrations are concept artwork, not verified commercial products or partnerships.

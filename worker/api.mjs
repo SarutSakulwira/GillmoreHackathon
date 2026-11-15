@@ -1,6 +1,7 @@
+import {simulateCollar} from '../server/demo.mjs';
 import {createOwnerService} from '../server/owner.mjs';
 import {seedSampleDay} from '../server/sample-day.mjs';
-const mapping={planVersions:'plan_versions',recordReviews:'record_reviews',pets:'pets',results:'results',wearable:'wearable',ownerLogs:'owner_logs',plans:'plans',programmes:'programmes',encounters:'encounters',medications:'medications',vaccinations:'vaccinations',allergies:'allergies',bodyAssessments:'body_assessments',files:'diagnostic_files',devices:'devices',planTasks:'plan_tasks',taskCompletions:'task_completions'};
+const mapping={consultations:'consultation_requests',planVersions:'plan_versions',recordReviews:'record_reviews',pets:'pets',results:'results',wearable:'wearable',ownerLogs:'owner_logs',plans:'plans',programmes:'programmes',encounters:'encounters',medications:'medications',vaccinations:'vaccinations',allergies:'allergies',bodyAssessments:'body_assessments',files:'diagnostic_files',devices:'devices',planTasks:'plan_tasks',taskCompletions:'task_completions'};
 const views={patientSummary:'patient_summary',bodyConditionTimeline:'body_condition_timeline',dailyHomeData:'daily_home_data',carePlanProgress:'care_plan_progress'};
 const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -24,13 +25,16 @@ export function createApi(seed){
    const url=new URL(request.url),path=url.pathname,db=env.DB;if(!db)return json({error:'Database is not configured.'},503);
    if(request.method!=='GET'&&request.headers.get('Origin')&&request.headers.get('Origin')!==url.origin)return json({error:'Origin not allowed.'},403);
    await initialize(db);
-   const ownerRoute=path.match(/^\/api\/owner\/([^/]+)(?:\/(journal|body-check|tasks)(?:\/([^/]+))?)?$/);
+   const ownerRoute=path.match(/^\/api\/owner\/([^/]+)(?:\/(journal|body-check|tasks|consultations)(?:\/([^/]+))?)?$/);
    if(request.method==='GET'&&ownerRoute&&!ownerRoute[2])return json(await createOwnerService(db).workspace(ownerRoute[1]));
    if(request.method==='GET'&&path==='/api/workspace')return json(await workspace(db));
    if(request.method==='GET'&&path==='/api/health')return json({ok:true,storage:'D1'});
    if(request.method==='GET')return json({error:'Endpoint not found.'},404);
    let text=await request.text();if(text.length>100000)fail('Request too large.',413);let input;try{input=JSON.parse(text||'{}');}catch{fail('Invalid JSON.');}if(!input||typeof input!=='object')fail('An object is required.');
+   const demoRoute=path.match(/^\/api\/demo\/([^/]+)$/);
+   if(request.method==='POST'&&demoRoute)return json(await simulateCollar(db,demoRoute[1],input));
    if(ownerRoute){const service=createOwnerService(db),[,petId,section,taskId]=ownerRoute;
+    if(request.method==='POST'&&section==='consultations')return json(await service.requestConsultation(petId,input));
     if(request.method==='POST'&&section==='journal')return json(await service.saveJournal(petId,input));
     if(request.method==='POST'&&section==='body-check')return json(await service.saveBodyCheck(petId,input));
     if(request.method==='PUT'&&section==='tasks'&&taskId)return json(await service.completeTask(petId,taskId,input));

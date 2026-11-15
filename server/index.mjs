@@ -19,9 +19,12 @@ const server=createServer(async(req,res)=>{
    // Local demonstration only. Prevent requests from unrelated browser origins.
    const origin=req.headers.origin;
    if(origin&&!new Set([`http://127.0.0.1:${port}`,`http://localhost:${port}`,'http://127.0.0.1:5173','http://localhost:5173']).has(origin))return json(res,403,{error:'Origin not allowed.'});
-   const ownerRoute=url.pathname.match(/^\/api\/owner\/([^/]+)(?:\/(journal|body-check|tasks)(?:\/([^/]+))?)?$/);
+   const demoRoute=url.pathname.match(/^\/api\/demo\/([^/]+)$/);
+   if(req.method==='POST'&&demoRoute)return json(res,200,await store.simulateCollar(demoRoute[1],await body(req)));
+   const ownerRoute=url.pathname.match(/^\/api\/owner\/([^/]+)(?:\/(journal|body-check|tasks|consultations)(?:\/([^/]+))?)?$/);
    if(ownerRoute){const [,petId,section,taskId]=ownerRoute;
     if(req.method==='GET'&&!section)return json(res,200,await store.owner.workspace(petId));
+    if(req.method==='POST'&&section==='consultations')return json(res,200,await store.owner.requestConsultation(petId,await body(req)));
     if(req.method==='POST'&&section==='journal')return json(res,200,await store.owner.saveJournal(petId,await body(req)));
     if(req.method==='POST'&&section==='body-check')return json(res,200,await store.owner.saveBodyCheck(petId,await body(req)));
     if(req.method==='PUT'&&section==='tasks'&&taskId)return json(res,200,await store.owner.completeTask(petId,taskId,await body(req)));

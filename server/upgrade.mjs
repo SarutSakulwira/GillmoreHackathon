@@ -1,6 +1,7 @@
 // Additive migration. Existing imported results and clinician edits are retained.
 export function upgrade(db) {
  db.exec("CREATE TABLE IF NOT EXISTS plan_versions(id TEXT PRIMARY KEY,petId TEXT NOT NULL,kind TEXT NOT NULL,payload TEXT NOT NULL,createdAt TEXT NOT NULL);\n\nCREATE TABLE IF NOT EXISTS record_reviews(id TEXT PRIMARY KEY,petId TEXT NOT NULL,kind TEXT NOT NULL,reviewedBy TEXT NOT NULL,reviewedAt TEXT NOT NULL);\n");
+ db.exec("CREATE TABLE IF NOT EXISTS consultation_requests(id TEXT PRIMARY KEY,petId TEXT NOT NULL REFERENCES pets(id),mode TEXT NOT NULL,reason TEXT NOT NULL,preferredDate TEXT NOT NULL,preferredWindow TEXT NOT NULL,shareSummary INTEGER NOT NULL,status TEXT NOT NULL,createdAt TEXT NOT NULL,summary TEXT);\n");
  const col=(table,name,type)=>{if(!db.prepare(`PRAGMA table_info(${table})`).all().some(c=>c.name===name))db.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${type}`);};
  for(const [n,t] of [['species','TEXT'],['microchip','TEXT'],['photo','TEXT'],['lastVisit','TEXT']])col('pets',n,t);
  for(const [n,t] of [['scratchingSeconds','INTEGER'],['lickingSeconds','INTEGER'],['headshakeCount','INTEGER'],['drinkingEvents','INTEGER'],['nightMovementEpisodes','INTEGER'],['validWearMinutes','INTEGER'],['deviceId','TEXT'],['algorithmVersion','TEXT']])col('wearable',n,t);
