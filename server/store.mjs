@@ -23,7 +23,7 @@ export function createStore(path) {
   function seed() {
     db.exec('BEGIN');
     try {
-      for (const table of ['task_completions','plan_tasks','diagnostic_files','body_assessments','devices','encounters','medications','vaccinations','allergies','migrations']) if(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table)) db.exec(`DELETE FROM ${table}`);
+      for (const table of ['plan_versions','record_reviews','task_completions','plan_tasks','diagnostic_files','body_assessments','devices','encounters','medications','vaccinations','allergies','migrations']) if(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table)) db.exec(`DELETE FROM ${table}`);
       for (const table of ['results','wearable','owner_logs','plans','programmes','pets']) db.exec(`DELETE FROM ${table}`);
       const pets = [
         ['PT-1042','Milo','Golden Retriever',7,'Male','Alex Morgan','MI','Healthy Weight','Brookfield Veterinary'],
@@ -66,7 +66,7 @@ export function createStore(path) {
   upgrade(db);
   const findPet = id => db.prepare('SELECT * FROM pets WHERE id=?').get(id);
   function workspace() {
-    return { pets:all('pets'),results:all('results'),wearable:all('wearable'),ownerLogs:all('owner_logs'),plans:all('plans').map(p=>({...p,tasks:JSON.parse(p.tasks)})),programmes:all('programmes'), encounters:all('encounters'),medications:all('medications'),vaccinations:all('vaccinations'),allergies:all('allergies'),bodyAssessments:all('body_assessments'),files:all('diagnostic_files'),devices:all('devices'),planTasks:all('plan_tasks'),taskCompletions:all('task_completions'),dashboardViews:{patientSummary:all('patient_summary'),bodyConditionTimeline:all('body_condition_timeline'),dailyHomeData:all('daily_home_data'),carePlanProgress:all('care_plan_progress')} };
+    return {planVersions:all('plan_versions').map(v=>({...v,payload:JSON.parse(v.payload)})),recordReviews:all('record_reviews'), pets:all('pets'),results:all('results'),wearable:all('wearable'),ownerLogs:all('owner_logs'),plans:all('plans').map(p=>({...p,tasks:JSON.parse(p.tasks)})),programmes:all('programmes'), encounters:all('encounters'),medications:all('medications'),vaccinations:all('vaccinations'),allergies:all('allergies'),bodyAssessments:all('body_assessments'),files:all('diagnostic_files'),devices:all('devices'),planTasks:all('plan_tasks'),taskCompletions:all('task_completions'),dashboardViews:{patientSummary:all('patient_summary'),bodyConditionTimeline:all('body_condition_timeline'),dailyHomeData:all('daily_home_data'),carePlanProgress:all('care_plan_progress')} };
   }
   function importResult(input) {
     if (!input || typeof input !== 'object') throw new InputError('A result object is required.');
@@ -91,10 +91,12 @@ export function createStore(path) {
     if(!result||result.status!=='Needs matching')throw new InputError('Only unmatched results can be assigned.');
     db.prepare("UPDATE results SET petId=?,status='Pending review' WHERE id=?").run(petId,id);
   }
-  function review(id,note) {
+  function review(id,note,shareWithOwner=true) {
     const result=db.prepare('SELECT * FROM results WHERE id=?').get(id);
     if(!result||!result.petId)throw new InputError('Match the result to a patient before review.');
     if(typeof note!=='string'||!note.trim()||note.length>2000)throw new InputError('Add a review note (maximum 2000 characters).');
+    if(typeof shareWithOwner!=='boolean')throw new InputError('Choose whether to share this result.');
+    db.prepare('INSERT OR REPLACE INTO record_reviews VALUES(?,?,?,?,?)').run(id,result.petId,shareWithOwner?'Shared result':'Clinic only','Dr. Avery Chen',new Date().toISOString());
     db.prepare("UPDATE results SET status='Reviewed',reviewedBy=?,reviewedAt=?,reviewNote=? WHERE id=?").run('Dr. Avery Chen',new Date().toISOString(),note,id);
   }
   function savePlan(petId,input) {
@@ -104,7 +106,7 @@ export function createStore(path) {
     if(!Array.isArray(input.tasks)||!input.tasks.length||input.tasks.length>10||input.tasks.some(t=>typeof t!=='string'||!t.trim()||t.length>500))throw new InputError('Add between 1 and 10 tasks (maximum 500 characters each).');
     if(!/^\d{4}-\d{2}-\d{2}$/.test(input.reviewDate)||!Number.isFinite(Date.parse(input.reviewDate)))throw new InputError('Choose a review date.');
     if(!['Draft','Published'].includes(input.status))throw new InputError('Invalid plan status.');
-    const plan=db.prepare('SELECT id FROM plans WHERE petId=?').get(petId);
+    const plan=db.prepare('SELECT * FROM plans WHERE petId=?').get(petId);
     if(!plan)throw new InputError('Plan not found.');
     if(input.structuredTasks!==undefined){
       if(!Array.isArray(input.structuredTasks)||input.structuredTasks.length<1||input.structuredTasks.length>10)throw new InputError('Add 1–10 tasks.');
@@ -113,7 +115,15 @@ export function createStore(path) {
       if(new Set(input.structuredTasks.filter(t=>t.id).map(t=>t.id)).size!==input.structuredTasks.filter(t=>t.id).length)throw new InputError('Duplicate task IDs.');
       for(const t of input.structuredTasks)if(t.id&&!db.prepare('SELECT id FROM plan_tasks WHERE id=? AND planId=?').get(t.id,plan.id))throw new InputError('Task does not belong to this plan.');
     }
+    const now=new Date().toISOString();
+    if(input.structuredTasks)for(const t of input.structuredTasks)if(t.metric==='activeMinutes'&&(findPet(petId).species!=='Dog'||t.source!=='Wearable')||t.metric==='weightKg'&&t.source==='Wearable'||t.metric==='ownerCheckin'&&t.source!=='Owner')throw new InputError('Choose a supported source for this measure.');
+    if(input.status==='Draft'&&plan.status==='Published'){
+      db.prepare('DELETE FROM plan_versions WHERE petId=? AND kind=?').run(petId,'Draft');
+      db.prepare('INSERT INTO plan_versions VALUES(?,?,?,?,?)').run(randomUUID(),petId,'Draft',JSON.stringify(input),now);return;
+    }
     db.exec('BEGIN');try{
+    db.prepare('INSERT INTO plan_versions VALUES(?,?,?,?,?)').run(randomUUID(),petId,'Archived',JSON.stringify({...plan,structuredTasks:db.prepare('SELECT * FROM plan_tasks WHERE planId=?').all(plan.id),completions:db.prepare('SELECT c.* FROM task_completions c JOIN plan_tasks t ON t.id=c.taskId WHERE t.planId=?').all(plan.id)}),now);
+    db.prepare("DELETE FROM plan_versions WHERE petId=? AND kind='Draft'").run(petId);
     db.prepare('UPDATE plans SET goal=?,tasks=?,reviewDate=?,status=?,updatedAt=?,updatedBy=? WHERE petId=?').run(input.goal,JSON.stringify(input.tasks),input.reviewDate,input.status,new Date().toISOString(),'Dr. Avery Chen',petId);
     if(input.structuredTasks){
       const keep=new Set(input.structuredTasks.map(t=>t.id));
@@ -122,5 +132,5 @@ export function createStore(path) {
     }
     db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
   }
-  return {workspace,seedSampleDay:()=>seedSampleDay(sqliteAdapter(db)),owner:createOwnerService(sqliteAdapter(db)),importResult,matchResult,review,savePlan,reset:()=>{seed();upgrade(db);},close:()=>db.close()};
+  return {workspace,seedSampleDay:()=>seedSampleDay(sqliteAdapter(db)),owner:createOwnerService(sqliteAdapter(db)),importResult,matchResult,review,savePlan,reviewOwner(id){const row=db.prepare('SELECT * FROM owner_logs WHERE id=?').get(id);if(!row)throw new InputError('Owner update not found.');db.prepare('INSERT OR REPLACE INTO record_reviews VALUES(?,?,?,?,?)').run(id,row.petId,'Owner update','Dr. Avery Chen',new Date().toISOString());},reset:()=>{seed();upgrade(db);},close:()=>db.close()};
 }

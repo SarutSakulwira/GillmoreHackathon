@@ -29,7 +29,8 @@ const server=createServer(async(req,res)=>{
    if(req.method==='GET'&&url.pathname==='/api/workspace')return json(res,200,store.workspace());
    if(req.method==='POST'&&url.pathname==='/api/results')return json(res,201,store.importResult(await body(req)));
    let match=url.pathname.match(/^\/api\/results\/([^/]+)\/(review|match)$/);
-   if(req.method==='POST'&&match){const data=await body(req);if(match[2]==='review')store.review(match[1],data.note);else store.matchResult(match[1],data.petId);return json(res,200,{ok:true});}
+   if(req.method==='POST'&&match){const data=await body(req);if(match[2]==='review')store.review(match[1],data.note,data.shareWithOwner);else store.matchResult(match[1],data.petId);return json(res,200,{ok:true});}
+   const ownerReview=url.pathname.match(/^\/api\/owner-updates\/([^/]+)\/review$/);if(req.method==='POST'&&ownerReview){store.reviewOwner(ownerReview[1]);return json(res,200,{ok:true});}
    match=url.pathname.match(/^\/api\/plans\/([^/]+)$/);
    if(req.method==='PUT'&&match){store.savePlan(match[1],await body(req));return json(res,200,{ok:true});}
    if(req.method==='POST'&&url.pathname==='/api/reset'){store.reset();return json(res,200,{ok:true});}

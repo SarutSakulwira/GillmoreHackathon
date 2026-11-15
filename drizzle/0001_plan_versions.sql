@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS plan_versions(id TEXT PRIMARY KEY,petId TEXT NOT NULL,kind TEXT NOT NULL,payload TEXT NOT NULL,createdAt TEXT NOT NULL);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS record_reviews(id TEXT PRIMARY KEY,petId TEXT NOT NULL,kind TEXT NOT NULL,reviewedBy TEXT NOT NULL,reviewedAt TEXT NOT NULL);

@@ -10,7 +10,7 @@ export function createOwnerService(db){
   const pet=await patient(petId),plan=await first("SELECT * FROM plans WHERE petId=? AND status='Published'",petId);
   const [wearable,ownerLogs,bodyAssessments,results,devices]=await Promise.all([
    all('SELECT * FROM wearable WHERE petId=? ORDER BY day,id',petId),all('SELECT * FROM owner_logs WHERE petId=? ORDER BY day DESC',petId),all('SELECT * FROM body_condition_timeline WHERE petId=? ORDER BY day,id',petId),
-   all("SELECT id,petId,type,label,value,unit,observedAt,source,reviewedBy,reviewedAt FROM results WHERE petId=? AND status='Reviewed' ORDER BY observedAt DESC",petId),all('SELECT * FROM devices WHERE petId=?',petId)
+   all("SELECT id,petId,type,label,value,unit,observedAt,source,reviewedBy,reviewedAt FROM results WHERE petId=? AND status='Reviewed' AND NOT EXISTS (SELECT 1 FROM record_reviews rr WHERE rr.id=results.id AND rr.kind='Clinic only') ORDER BY observedAt DESC",petId),all('SELECT * FROM devices WHERE petId=?',petId)
   ]);
   const planTasks=plan?await all('SELECT * FROM plan_tasks WHERE planId=?',plan.id):[];
   const taskCompletions=plan?await all('SELECT c.* FROM task_completions c JOIN plan_tasks t ON t.id=c.taskId WHERE t.planId=? ORDER BY c.day',plan.id):[];
