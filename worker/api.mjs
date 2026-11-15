@@ -1,7 +1,8 @@
+import {createEngagementService} from '../server/engagement.mjs';
 import {simulateCollar} from '../server/demo.mjs';
 import {createOwnerService} from '../server/owner.mjs';
 import {seedSampleDay} from '../server/sample-day.mjs';
-const mapping={consultations:'consultation_requests',planVersions:'plan_versions',recordReviews:'record_reviews',pets:'pets',results:'results',wearable:'wearable',ownerLogs:'owner_logs',plans:'plans',programmes:'programmes',encounters:'encounters',medications:'medications',vaccinations:'vaccinations',allergies:'allergies',bodyAssessments:'body_assessments',files:'diagnostic_files',devices:'devices',planTasks:'plan_tasks',taskCompletions:'task_completions'};
+const mapping={challenges:'reward_challenges',taskPhotos:'task_photos',coupons:'reward_coupons',consultations:'consultation_requests',planVersions:'plan_versions',recordReviews:'record_reviews',pets:'pets',results:'results',wearable:'wearable',ownerLogs:'owner_logs',plans:'plans',programmes:'programmes',encounters:'encounters',medications:'medications',vaccinations:'vaccinations',allergies:'allergies',bodyAssessments:'body_assessments',files:'diagnostic_files',devices:'devices',planTasks:'plan_tasks',taskCompletions:'task_completions'};
 const views={patientSummary:'patient_summary',bodyConditionTimeline:'body_condition_timeline',dailyHomeData:'daily_home_data',carePlanProgress:'care_plan_progress'};
 const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -19,12 +20,15 @@ export function createApi(seed){
   })().catch(e=>{initialized=undefined;throw e;});
   await initialized;
  }
- async function workspace(db){const entries=[...Object.entries(mapping),...Object.entries(views)];const output=await db.batch(entries.map(([,t])=>db.prepare(`SELECT * FROM ${t}`)));const result={dashboardViews:{}};entries.forEach(([key],i)=>{if(key in views)result.dashboardViews[key]=output[i].results;else result[key]=output[i].results;});result.planVersions=result.planVersions.map(v=>({...v,payload:JSON.parse(v.payload)}));result.plans=result.plans.map(p=>({...p,tasks:JSON.parse(p.tasks)}));return result;}
+ async function workspace(db){const entries=[...Object.entries(mapping),...Object.entries(views)];const output=await db.batch(entries.map(([,t])=>db.prepare(`SELECT * FROM ${t}`)));const result={dashboardViews:{}};entries.forEach(([key],i)=>{if(key in views)result.dashboardViews[key]=output[i].results;else result[key]=output[i].results;});result.challenges=result.challenges.map(c=>({...c,snapshot:c.snapshot?JSON.parse(c.snapshot):null}));result.planVersions=result.planVersions.map(v=>({...v,payload:JSON.parse(v.payload)}));result.plans=result.plans.map(p=>({...p,tasks:JSON.parse(p.tasks)}));return result;}
  return async function handle(request,env){
   try{
    const url=new URL(request.url),path=url.pathname,db=env.DB;if(!db)return json({error:'Database is not configured.'},503);
    if(request.method!=='GET'&&request.headers.get('Origin')&&request.headers.get('Origin')!==url.origin)return json({error:'Origin not allowed.'},403);
    await initialize(db);
+   const engagementRoute=path.match(/^\/api\/owner\/([^/]+)\/(rewards|photos|coupons)(?:\/([^/]+))?$/);
+   const challengeRoute=path.match(/^\/api\/patients\/([^/]+)\/challenges$/);
+   if(engagementRoute&&request.method==='GET'&&engagementRoute[2]==='rewards')return json(await createEngagementService(db).workspace(engagementRoute[1]));
    const ownerRoute=path.match(/^\/api\/owner\/([^/]+)(?:\/(journal|body-check|tasks|consultations)(?:\/([^/]+))?)?$/);
    if(request.method==='GET'&&ownerRoute&&!ownerRoute[2])return json(await createOwnerService(db).workspace(ownerRoute[1]));
    if(request.method==='GET'&&path==='/api/workspace')return json(await workspace(db));
@@ -33,6 +37,8 @@ export function createApi(seed){
    let text=await request.text();if(text.length>100000)fail('Request too large.',413);let input;try{input=JSON.parse(text||'{}');}catch{fail('Invalid JSON.');}if(!input||typeof input!=='object')fail('An object is required.');
    const demoRoute=path.match(/^\/api\/demo\/([^/]+)$/);
    if(request.method==='POST'&&demoRoute)return json(await simulateCollar(db,demoRoute[1],input));
+   if(request.method==='POST'&&engagementRoute){const [,petId,section,key]=engagementRoute,service=createEngagementService(db);if(section==='rewards')return json(await service.sync(petId));if(section==='photos')return json(await service.uploadPhoto(petId,key,input));if(section==='coupons')return json(await service.applyCoupon(petId,key,input));}
+   if(request.method==='POST'&&challengeRoute)return json(await createEngagementService(db).createChallenge(challengeRoute[1],input),201);
    if(ownerRoute){const service=createOwnerService(db),[,petId,section,taskId]=ownerRoute;
     if(request.method==='POST'&&section==='consultations')return json(await service.requestConsultation(petId,input));
     if(request.method==='POST'&&section==='journal')return json(await service.saveJournal(petId,input));

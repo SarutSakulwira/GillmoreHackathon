@@ -7,6 +7,7 @@
 @media(max-width:540px){.metric-tabs{grid-template-columns:repeat(2,minmax(0,1fr));padding:16px}.wear-status{padding:15px 19px}.safety-strip{flex-direction:column;gap:8px}.header-programme{margin-left:81px}.compact-toolbar{flex-wrap:wrap}.plan-actions{flex-wrap:wrap}.history-row{flex-wrap:wrap}.summary-aside{gap:18px}}
 .share-toggle{display:flex;align-items:center;gap:12px;font-size:14px;margin-top:25px}.share-toggle input{width:18px;height:18px;accent-color:#a28b16}
 .consult-summary{background:#f2f3eb;padding:17px;border-radius:9px;font-size:12px;line-height:1.8;max-height:300px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.vet-rewards{margin-top:25px}.reward-assignment{border-top:1px solid #e8eadf}.reward-assignment>p{font-size:14px;margin-top:9px}.reward-assignment>small{margin-top:7px}.reward-assignment details{font-size:13px;margin-top:15px}.reward-assignment summary{cursor:pointer;font-weight:600}.reward-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:15px;margin-top:15px}.reward-photo-grid figure{margin:0}.reward-photo-grid img{width:100%;height:100px;object-fit:contain;background:#eef0e6;border-radius:7px}.reward-photo-grid figcaption{font-size:12px;margin-top:5px}
 
 .badge.red{background:#fde5e6;color:#a42335;border:1px solid #efb9bf}
 .collar-alert{background:#fff1f2;border:1px solid #e6a6af;border-left:4px solid #bd3045;color:#992338;border-radius:12px;padding:18px 22px;margin-bottom:20px;line-height:1.6}

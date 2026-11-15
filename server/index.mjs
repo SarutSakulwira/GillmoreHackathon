@@ -21,6 +21,9 @@ const server=createServer(async(req,res)=>{
    if(origin&&!new Set([`http://127.0.0.1:${port}`,`http://localhost:${port}`,'http://127.0.0.1:5173','http://localhost:5173']).has(origin))return json(res,403,{error:'Origin not allowed.'});
    const demoRoute=url.pathname.match(/^\/api\/demo\/([^/]+)$/);
    if(req.method==='POST'&&demoRoute)return json(res,200,await store.simulateCollar(demoRoute[1],await body(req)));
+   const engagementRoute=url.pathname.match(/^\/api\/owner\/([^/]+)\/(rewards|photos|coupons)(?:\/([^/]+))?$/);
+   if(engagementRoute){const [,petId,section,key]=engagementRoute;if(section==='rewards'&&req.method==='GET')return json(res,200,await store.engagement.workspace(petId));if(section==='rewards'&&req.method==='POST')return json(res,200,await store.engagement.sync(petId));if(section==='photos'&&req.method==='POST')return json(res,200,await store.engagement.uploadPhoto(petId,key,await body(req)));if(section==='coupons'&&req.method==='POST')return json(res,200,await store.engagement.applyCoupon(petId,key,await body(req)));}
+   const challengeRoute=url.pathname.match(/^\/api\/patients\/([^/]+)\/challenges$/);if(challengeRoute&&req.method==='POST')return json(res,201,await store.engagement.createChallenge(challengeRoute[1],await body(req)));
    const ownerRoute=url.pathname.match(/^\/api\/owner\/([^/]+)(?:\/(journal|body-check|tasks|consultations)(?:\/([^/]+))?)?$/);
    if(ownerRoute){const [,petId,section,taskId]=ownerRoute;
     if(req.method==='GET'&&!section)return json(res,200,await store.owner.workspace(petId));

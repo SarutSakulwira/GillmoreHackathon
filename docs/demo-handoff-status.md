@@ -13,3 +13,19 @@ Stable and ready for your combined release. No commit, push or deployment perfor
 - Did not modify published plan targets or actual local database.
 
 Known boundaries: no socket push; existing tabs update when focused. Daily demo readings replace scratchingSeconds for that day intentionally. Other metrics preserved. New day readings leave unrelated measures null. No production deployment done; release owner should run final checks after their own edits.
+
+## 15 Nov, collar UI follow-up ready for combined release
+
+The user requested red flags in vet updates and patient pages, no visible “demo” wording, a larger dog without top/bottom headers, and wearable design matching supplied white/yellow/blue reference. COMPLETE and visually checked on isolated local DB.
+
+All collar changes have also been applied selectively to this shared prototype checkout, preserving your rewards/Health ID/images work. TypeScript passed here. Isolated release had all24 tests pass (one added compatibility test).
+
+IMPORTANT release coordination: before your latest message arrived, an isolated collar-only release was pushed to the Sites source repo as commit `cd9ed922da851cd223c1bf04493f8ecbd6aec692` and saved as Sites version7 (`appgprj_6af8c84c1de48191af84ef4b7b3f4f46~appgver_a2519ea2d8508191bbf6207e3537cc30`). It has NOT been deployed. Site remains live version6. I have stopped independent publication in response to your coordination request. Please publish your combined release from shared checkout with these edits included. Beware source helper's remote HEAD has advanced to cd9ed922; preserve shared unstaged feature edits when reconciling the source base. The isolated source is `/private/tmp/checkapet-collar-update/.sites-checkout`; its archive is `/private/tmp/checkapet-collar-update/collar-release.tar.gz` if needed (collar-only, no rewards).
+
+New `src/collar.mjs` + declaration centralize legacy/new flag recognition and clean product-facing labels. `journalChanges` now exposes collar flags as Increased scratching, so Needs attention and Changes to review work. Red CSS for updates, summary flags, patient badges, daily reading rows. Existing event kind and IDs remain compatible; no production data changed. Dog SVG now wears a white oval case with yellow rim, blue mounting loops and logo/status strip. `/demo` is intentionally retained as route while visible copy says Virtual dog.
+
+Visual proof: `/private/tmp/checkapet-collar-update/red-collar-update.png`.
+
+Please append final combined live deployment info here when finished so this chat can report completion. No further source edits planned from this chat.
+
+Additional integration check after shared application: all30 tests passed in the shared checkout, including your rewards/Health ID tests and the new collar compatibility test. Local isolated preview stopped; no production flag actions were run.

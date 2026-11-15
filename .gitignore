@@ -14,3 +14,6 @@ data/
 *.sqlite-shm
 *.sqlite-wal
 outputs/
+
+# Ignore dependency directories and machine-specific symlinks.
+node_modules

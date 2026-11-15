@@ -1,3 +1,4 @@
+import {createEngagementService} from './engagement.mjs';
 import {simulateCollar} from './demo.mjs';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
@@ -24,7 +25,7 @@ export function createStore(path) {
   function seed() {
     db.exec('BEGIN');
     try {
-      for (const table of ['consultation_requests','plan_versions','record_reviews','task_completions','plan_tasks','diagnostic_files','body_assessments','devices','encounters','medications','vaccinations','allergies','migrations']) if(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table)) db.exec(`DELETE FROM ${table}`);
+      for (const table of ['task_photos','reward_coupons','reward_challenges','consultation_requests','plan_versions','record_reviews','task_completions','plan_tasks','diagnostic_files','body_assessments','devices','encounters','medications','vaccinations','allergies','migrations']) if(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table)) db.exec(`DELETE FROM ${table}`);
       for (const table of ['results','wearable','owner_logs','plans','programmes','pets']) db.exec(`DELETE FROM ${table}`);
       const pets = [
         ['PT-1042','Milo','Golden Retriever',7,'Male','Alex Morgan','MI','Healthy Weight','Brookfield Veterinary'],
@@ -67,7 +68,7 @@ export function createStore(path) {
   upgrade(db);
   const findPet = id => db.prepare('SELECT * FROM pets WHERE id=?').get(id);
   function workspace() {
-    return {consultations:all('consultation_requests'),planVersions:all('plan_versions').map(v=>({...v,payload:JSON.parse(v.payload)})),recordReviews:all('record_reviews'), pets:all('pets'),results:all('results'),wearable:all('wearable'),ownerLogs:all('owner_logs'),plans:all('plans').map(p=>({...p,tasks:JSON.parse(p.tasks)})),programmes:all('programmes'), encounters:all('encounters'),medications:all('medications'),vaccinations:all('vaccinations'),allergies:all('allergies'),bodyAssessments:all('body_assessments'),files:all('diagnostic_files'),devices:all('devices'),planTasks:all('plan_tasks'),taskCompletions:all('task_completions'),dashboardViews:{patientSummary:all('patient_summary'),bodyConditionTimeline:all('body_condition_timeline'),dailyHomeData:all('daily_home_data'),carePlanProgress:all('care_plan_progress')} };
+    return {challenges:all('reward_challenges').map(c=>({...c,snapshot:c.snapshot?JSON.parse(c.snapshot):null})),taskPhotos:all('task_photos'),coupons:all('reward_coupons'),consultations:all('consultation_requests'),planVersions:all('plan_versions').map(v=>({...v,payload:JSON.parse(v.payload)})),recordReviews:all('record_reviews'), pets:all('pets'),results:all('results'),wearable:all('wearable'),ownerLogs:all('owner_logs'),plans:all('plans').map(p=>({...p,tasks:JSON.parse(p.tasks)})),programmes:all('programmes'), encounters:all('encounters'),medications:all('medications'),vaccinations:all('vaccinations'),allergies:all('allergies'),bodyAssessments:all('body_assessments'),files:all('diagnostic_files'),devices:all('devices'),planTasks:all('plan_tasks'),taskCompletions:all('task_completions'),dashboardViews:{patientSummary:all('patient_summary'),bodyConditionTimeline:all('body_condition_timeline'),dailyHomeData:all('daily_home_data'),carePlanProgress:all('care_plan_progress')} };
   }
   function importResult(input) {
     if (!input || typeof input !== 'object') throw new InputError('A result object is required.');
@@ -133,5 +134,5 @@ export function createStore(path) {
     }
     db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
   }
-  return {simulateCollar:(petId,input)=>simulateCollar(sqliteAdapter(db),petId,input),workspace,seedSampleDay:()=>seedSampleDay(sqliteAdapter(db)),owner:createOwnerService(sqliteAdapter(db)),importResult,matchResult,review,savePlan,reviewOwner(id){const row=db.prepare('SELECT * FROM owner_logs WHERE id=?').get(id);if(!row)throw new InputError('Owner update not found.');db.prepare('INSERT OR REPLACE INTO record_reviews VALUES(?,?,?,?,?)').run(id,row.petId,'Owner update','Dr. Avery Chen',new Date().toISOString());},reset:()=>{seed();upgrade(db);},close:()=>db.close()};
+  return {engagement:createEngagementService(sqliteAdapter(db)),simulateCollar:(petId,input)=>simulateCollar(sqliteAdapter(db),petId,input),workspace,seedSampleDay:()=>seedSampleDay(sqliteAdapter(db)),owner:createOwnerService(sqliteAdapter(db)),importResult,matchResult,review,savePlan,reviewOwner(id){const row=db.prepare('SELECT * FROM owner_logs WHERE id=?').get(id);if(!row)throw new InputError('Owner update not found.');db.prepare('INSERT OR REPLACE INTO record_reviews VALUES(?,?,?,?,?)').run(id,row.petId,'Owner update','Dr. Avery Chen',new Date().toISOString());},reset:()=>{seed();upgrade(db);},close:()=>db.close()};
 }

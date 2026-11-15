@@ -15,7 +15,8 @@ export function createOwnerService(db){
   const planTasks=plan?await all('SELECT * FROM plan_tasks WHERE planId=?',plan.id):[];
   const taskCompletions=plan?await all('SELECT c.* FROM task_completions c JOIN plan_tasks t ON t.id=c.taskId WHERE t.planId=? ORDER BY c.day',plan.id):[];
   const consultations=await all('SELECT * FROM consultation_requests WHERE petId=? ORDER BY createdAt DESC',petId);
-  return {consultations,pet,plan:plan?{...plan,tasks:JSON.parse(plan.tasks)}:null,planTasks,taskCompletions,wearable,ownerLogs:ownerLogs.map(l=>({...l,journal:readJournal(l)})),bodyAssessments,results,devices};
+  const [encounters,medications,vaccinations,allergies,imaging]=await Promise.all([all('SELECT * FROM encounters WHERE petId=? ORDER BY day DESC',petId),all('SELECT * FROM medications WHERE petId=?',petId),all('SELECT * FROM vaccinations WHERE petId=?',petId),all('SELECT * FROM allergies WHERE petId=?',petId),all("SELECT f.* FROM diagnostic_files f JOIN results r ON r.id=f.resultId WHERE f.petId=? AND r.status='Reviewed' AND NOT EXISTS (SELECT 1 FROM record_reviews rr WHERE rr.id=r.id AND rr.kind='Clinic only') ORDER BY f.day DESC",petId)]);
+  return {encounters,medications,vaccinations,allergies,imaging,consultations,pet,plan:plan?{...plan,tasks:JSON.parse(plan.tasks)}:null,planTasks,taskCompletions,wearable,ownerLogs:ownerLogs.map(l=>({...l,journal:readJournal(l)})),bodyAssessments,results,devices};
  }
  async function saveJournal(petId,input){
   await patient(petId);if(!input||typeof input!=='object')reject('A journal entry is required.');const day=validateDay(input.day);

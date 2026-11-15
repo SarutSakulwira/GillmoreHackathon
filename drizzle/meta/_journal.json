@@ -22,6 +22,13 @@
       "when": 1794740400000,
       "tag": "0002_consultations",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794747600000,
+      "tag": "0003_rewards",
+      "breakpoints": true
     }
   ]
 }
